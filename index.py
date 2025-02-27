@@ -1,9 +1,6 @@
 import streamlit as st
 import random
 import time
-import json
-import pandas as pd
-import plotly.express as px
 from datetime import datetime
 
 # Page Configuration
@@ -37,7 +34,7 @@ st.markdown("""
     }
     .hint-text {
         font-size: 18px;
-        color: black;
+        color: #6c757d;
         text-align: center;
         font-style: italic;
     }
@@ -47,26 +44,13 @@ st.markdown("""
         text-align: center;
         color: #dc3545;
     }
-    .category-btn {
-        width: 100%;
-        padding: 20px;
-        margin: 5px;
-        border-radius: 10px;
-        border: none;
-        background-color: #007bff;
-        color: white;
-        font-size: 18px;
-        cursor: pointer;
-    }
-    .category-btn:hover {
-        background-color: #0056b3;
-    }
     .stats-card {
-        background-color: white;
+        background-color: black;
         padding: 20px;
         border-radius: 10px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         text-align: center;
+        margin: 10px 0;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -176,13 +160,15 @@ def main():
         if st.session_state.game_history:
             st.write("### Your Game Statistics")
             
-            # Convert game history to DataFrame
-            history_df = pd.DataFrame(st.session_state.game_history)
+            # Calculate statistics
+            scores = [game['score'] for game in st.session_state.game_history]
+            avg_score = sum(scores) / len(scores)
+            best_score = max(scores)
+            total_games = len(scores)
             
             # Display summary statistics
             col1, col2, col3 = st.columns(3)
             with col1:
-                avg_score = history_df['score'].mean()
                 st.markdown(f"""
                     <div class='stats-card'>
                         <h4>Average Score</h4>
@@ -191,7 +177,6 @@ def main():
                 """, unsafe_allow_html=True)
             
             with col2:
-                best_score = history_df['score'].max()
                 st.markdown(f"""
                     <div class='stats-card'>
                         <h4>Best Score</h4>
@@ -200,7 +185,6 @@ def main():
                 """, unsafe_allow_html=True)
             
             with col3:
-                total_games = len(history_df)
                 st.markdown(f"""
                     <div class='stats-card'>
                         <h4>Total Games</h4>
@@ -208,15 +192,18 @@ def main():
                     </div>
                 """, unsafe_allow_html=True)
             
-            # Performance trend
-            fig = px.line(history_df, x=history_df.index, y='score', 
-                         title='Your Score History')
-            st.plotly_chart(fig)
-            
-            # Category performance
-            category_avg = history_df.groupby('category')['score'].mean()
-            fig2 = px.bar(category_avg, title='Average Score by Category')
-            st.plotly_chart(fig2)
+            # Display recent games
+            st.write("### Recent Games")
+            for game in reversed(st.session_state.game_history[-5:]):
+                st.markdown(f"""
+                    <div class='stats-card'>
+                        <p>Category: {game['category']}</p>
+                        <p>Word: {game['word']}</p>
+                        <p>Score: {game['score']}</p>
+                        <p>Time: {game['time_taken']} seconds</p>
+                        <p>Attempts: {game['attempts']}</p>
+                    </div>
+                """, unsafe_allow_html=True)
     
     else:
         # Display game interface
@@ -245,14 +232,12 @@ def main():
                         st.success("Correct! 🎉")
                     else:
                         st.error("Try again!")
-        
+
+        # Move Next Word button to its own column
         with col2:
-            if st.button("Get Hint") and st.session_state.hints_remaining > 0:
-                st.session_state.hints_remaining -= 1
-                hint_index = random.randint(0, len(st.session_state.current_word)-1)
-                hint = f"Letter {hint_index+1} is '{st.session_state.current_word[hint_index]}'"
-                st.markdown(f"<div class='hint-text'>{hint}</div>", unsafe_allow_html=True)
-                st.write(f"Hints remaining: {st.session_state.hints_remaining}")
+            if st.button("Next Word"):
+                start_new_game(st.session_state.current_category)
+                st.rerun()
         
         with col3:
             if st.button("End Game"):

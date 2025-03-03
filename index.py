@@ -17,7 +17,7 @@ st.markdown("""
         padding: 0rem 0rem;
     }
     .word-display {
-        font-size: 48px;
+        font-size: 38px;
         font-weight: bold;
         text-align: center;
         padding: 20px;
@@ -32,12 +32,12 @@ st.markdown("""
         text-align: center;
         color: #28a745;
     }
-    .hint-text {
-        font-size: 18px;
-        color: #6c757d;
-        text-align: center;
-        font-style: italic;
-    }
+    # .hint-text {
+    #     font-size: 18px;
+    #     color: #6c757d;
+    #     text-align: center;
+    #     font-style: italic;
+    # }
     .timer {
         font-size: 24px;
         font-weight: bold;
@@ -59,7 +59,7 @@ st.markdown("""
 WORD_CATEGORIES = {
     "Animals": ["ELEPHANT", "GIRAFFE", "PENGUIN", "KANGAROO", "DOLPHIN", "CHEETAH", "ZEBRA", "LION", "TIGER", "MONKEY"],
     "Countries": ["FRANCE", "JAPAN", "BRAZIL", "CANADA", "INDIA", "AUSTRALIA", "EGYPT", "ITALY", "SPAIN", "MEXICO"],
-    "Fruits": ["APPLE", "BANANA", "ORANGE", "MANGO", "GRAPE", "PINEAPPLE", "STRAWBERRY", "KIWI", "PEACH", "PLUM"],
+    "Fruits": ["APPLE", "BANANA", "ORANGE", "MANGO", "GRAPES", "PINEAPPLE", "STRAWBERRY", "KIWI", "PEACH", "PLUM"],
     "Sports": ["FOOTBALL", "BASKETBALL", "TENNIS", "CRICKET", "VOLLEYBALL", "HOCKEY", "BASEBALL", "RUGBY", "GOLF", "BOXING"]
 }
 
@@ -84,6 +84,8 @@ if 'game_history' not in st.session_state:
     st.session_state.game_history = []
 if 'words_played' not in st.session_state:
     st.session_state.words_played = set()
+if 'word_counter' not in st.session_state:
+    st.session_state.word_counter = 0
 
 def scramble_word(word):
     """Scramble the letters of a word"""
@@ -115,6 +117,7 @@ def start_new_game(category):
     st.session_state.start_time = time.time()
     st.session_state.hints_remaining = 3
     st.session_state.attempts = 0
+    st.session_state.word_counter += 1
 
 def check_answer(user_answer):
     """Check if the user's answer is correct"""
@@ -221,7 +224,11 @@ def main():
                    unsafe_allow_html=True)
         
         # Input field
-        user_answer = st.text_input("Enter your answer:", key="answer").strip()
+        user_answer = st.text_input(
+            "Enter your answer:", 
+            key=f"answer_{st.session_state.word_counter}",
+            value=""
+        ).strip()
         
         col1, col2, col3 = st.columns(3)
         
